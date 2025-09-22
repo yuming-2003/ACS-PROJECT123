@@ -1,2 +1,3 @@
 # ACS-PROJECT123
-First set of class wide projects
+First set of class-wide projects
+
