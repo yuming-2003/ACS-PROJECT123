@@ -44,6 +44,23 @@
 
 ### 3.2 Pattern & Granularity sweep
 
+- The pattern–stride sweep shows how access type and stride size affect memory hierarchy performance. The three graphs below plot both latency and bandwidth of sequential reading, writing, and rmw
+
+### Sequential Reads
+At small strides (4–64 B), bandwidth was highest and latency lowest, since the hardware prefetcher efficiently streamed cache lines. Beyond one cache line (≥ 64 B), spatial locality was lost and prefetch fell off. Bandwidth dropped sharply and latency rose, flattening near DRAM access time at 4 KiB strides.
+<img width="1580" height="980" alt="image" src="https://github.com/user-attachments/assets/62e91569-11af-4521-8f0f-ea823e9fcd59" />
+## Sequential Writes
+Writes consistently underperformed reads due to **Read-For-Ownership (RFO)**: each store requires a read + writeback. This doubled traffic and reduced effective GiB/s, especially once strides exceeded the line size.
+<img width="1580" height="980" alt="image" src="https://github.com/user-attachments/assets/1f7e843c-983b-4224-8b07-265be08df877" />
+
+## Read-Modify-Write (RMW)
+RMW showed the poorest bandwidth. Each access triggers both read and write operations, compounding RFO overhead. Latency was slightly higher than write-only, consistent with doubled transactions.
+<img width="1580" height="980" alt="image" src="https://github.com/user-attachments/assets/a8f2bc3a-a34f-4e40-be47-9367f4cc0aac" />
+
+## This experiment demonstrated that:
+- Prefetcher is effective at small strides, ineffective once stride ≥ line size.  
+- Stride growth reduces spatial locality → lower bandwidth, higher latency. 
+
 
 
 
