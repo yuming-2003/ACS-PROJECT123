@@ -1,0 +1,6 @@
+N_bytes=67108864,stride=1,repeats=1000,read%=100,threads=1,time=94.483353,GiB/s=0.661
+N_bytes=67108864,stride=1,repeats=1000,read%=100,threads=2,time=48.200327,GiB/s=1.297
+N_bytes=67108864,stride=1,repeats=1000,read%=100,threads=4,time=24.737939,GiB/s=2.526
+N_bytes=67108864,stride=1,repeats=1000,read%=100,threads=8,time=12.940515,GiB/s=4.830
+N_bytes=67108864,stride=1,repeats=1000,read%=100,threads=12,time=8.995101,GiB/s=6.948
+N_bytes=67108864,stride=1,repeats=1000,read%=100,threads=16,time=10.546097,GiB/s=5.926

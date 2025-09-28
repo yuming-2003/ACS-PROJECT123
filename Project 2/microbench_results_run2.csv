@@ -1,0 +1,26 @@
+ts,N_bytes,stride,repeats,read_pct,threads,time,GiB/s
+2025-09-27 14:24:43,N_bytes=32768,stride=1,repeats=5,read%=100,threads=1,time=0.000268,GiB/s=0.569
+2025-09-27 14:24:43,N_bytes=262144,stride=1,repeats=5,read%=100,threads=1,time=0.001809,GiB/s=0.675
+2025-09-27 14:24:43,N_bytes=2097152,stride=1,repeats=5,read%=100,threads=1,time=0.014509,GiB/s=0.673
+2025-09-27 14:24:43,N_bytes=33554432,stride=1,repeats=5,read%=100,threads=1,time=0.238275,GiB/s=0.656
+2025-09-27 14:24:43,N_bytes=268435456,stride=1,repeats=5,read%=100,threads=1,time=1.925392,GiB/s=0.649
+2025-09-27 14:24:43,N_bytes=536870912,stride=1,repeats=5,read%=100,threads=1,time=3.809983,GiB/s=0.656
+2025-09-27 14:24:43,N_bytes=67108864,stride=1,repeats=5,read%=100,threads=1,time=0.486504,GiB/s=0.642
+2025-09-27 14:24:43,N_bytes=67108864,stride=2,repeats=5,read%=100,threads=1,time=0.241245,GiB/s=0.648
+2025-09-27 14:24:43,N_bytes=67108864,stride=4,repeats=5,read%=100,threads=1,time=0.121953,GiB/s=0.641
+2025-09-27 14:24:43,N_bytes=67108864,stride=8,repeats=5,read%=100,threads=1,time=0.060724,GiB/s=0.643
+2025-09-27 14:24:43,N_bytes=67108864,stride=16,repeats=5,read%=100,threads=1,time=0.030272,GiB/s=0.645
+2025-09-27 14:24:43,N_bytes=67108864,stride=32,repeats=5,read%=100,threads=1,time=0.015158,GiB/s=0.644
+2025-09-27 14:24:43,N_bytes=67108864,stride=64,repeats=5,read%=100,threads=1,time=0.007564,GiB/s=0.646
+2025-09-27 14:24:43,N_bytes=67108864,stride=128,repeats=5,read%=100,threads=1,time=0.003766,GiB/s=0.648
+2025-09-27 14:24:43,N_bytes=67108864,stride=256,repeats=5,read%=100,threads=1,time=0.001885,GiB/s=0.648
+2025-09-27 14:24:43,N_bytes=67108864,stride=512,repeats=5,read%=100,threads=1,time=0.000958,GiB/s=0.637
+2025-09-27 14:24:43,N_bytes=67108864,stride=1024,repeats=5,read%=100,threads=1,time=0.000479,GiB/s=0.637
+2025-09-27 14:24:43,N_bytes=67108864,stride=1,repeats=5,read%=100,threads=1,time=0.484778,GiB/s=0.645
+2025-09-27 14:24:43,N_bytes=67108864,stride=1,repeats=5,read%=70,threads=1,time=0.620519,GiB/s=0.504
+2025-09-27 14:24:43,N_bytes=67108864,stride=1,repeats=5,read%=50,threads=1,time=0.712619,GiB/s=0.439
+2025-09-27 14:24:43,N_bytes=67108864,stride=1,repeats=5,read%=0,threads=1,time=0.485545,GiB/s=0.644
+2025-09-27 14:24:43,N_bytes=268435456,stride=1,repeats=5,read%=100,threads=1,time=1.914807,GiB/s=0.653
+2025-09-27 14:24:43,N_bytes=268435456,stride=1,repeats=5,read%=100,threads=2,time=0.987428,GiB/s=1.266
+2025-09-27 14:24:43,N_bytes=268435456,stride=1,repeats=5,read%=100,threads=4,time=0.502001,GiB/s=2.490
+2025-09-27 14:24:43,N_bytes=268435456,stride=1,repeats=5,read%=100,threads=8,time=0.252885,GiB/s=4.943
