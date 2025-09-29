@@ -7,10 +7,13 @@
 ---
 
 ## 1) Introduction
-
+Modern CPUs have a deep memory hierarchy (L1/L2/L3 caches + DRAM). Each level differs by orders of magnitude
+in latency and bandwidth. Like storage, memory shows a throughput–latency trade-off: as concurrency
+(outstanding memory requests) rises, bandwidth approaches a limit while average latency increases due to
+queuing.
 
 ## 2) Experimental Setup
-
+The project used a lightweight SAXPY kernel to systematically evaluate memory system behavior under controlled conditions. Experiments were organized into six parts: (1) zero-queue baselines to measure raw memory latency, (2) working-set size sweeps to expose cache capacity boundaries, (3) stride sweeps to study spatial locality and prefetching, (4) intensity sweeps to evaluate throughput vs latency and identify the “knee” of performance, (5) pattern & granularity sweeps to compare sequential, strided, and random access behaviors, and (6) cache- and TLB-miss impacts, where working set size, stride, and page locality were varied to correlate runtime with hierarchical penalties. Ubuntu/WSL2 was chosen as the environment because it provides GCC, mmap, and other POSIX system calls for fine-grained memory control, and supports Linux-native tools like perf (even though WSL2 limits hardware counters). These capabilities made Ubuntu the most practical platform for controlled, repeatable low-level memory experiments.
 
 ## 3) Results
 
@@ -106,5 +109,60 @@ Concurrency = Throughput * Latency
 <img width="1779" height="980" alt="image" src="https://github.com/user-attachments/assets/e3de5f3c-efd8-422f-8fc7-08dfb4735ead" />
 - From the Bandwidth and latency transition graphs, they are both flat across 32 KB–512 MB, indicating a DRAM-bound, latency-limited access pattern with ~one line in flight. This means that both latency and bandwidth are governed by main-memory service time rather than cache capacity. The transitions were marked by the vertical lines, provided by the CPU statistics.
 
-### 3.6 Pattern & Granularity sweep
-### 3.7 Pattern & Granularity sweep
+### 3.6 Cache-miss impacts
+
+### Part 6. Cache-Miss Impact
+
+**Methodology.**  
+Because WSL2’s kernel does not expose hardware performance counters, I could not directly measure cache- or TLB-miss rates with perf. Instead, I relied on cycle-accurate runtime and throughput measurements as a proxy. The observed knees in throughput and rising latency align with expected cache capacity and stride effects, providing indirect but consistent evidence of cache/TLB miss impact. On native Linux with perf, these results would be confirmed by correlating runtime directly with measured miss rates.
+
+I implemented a lightweight SAXPY kernel and swept the working set size (32 KiB – 256 MiB), stride (1–256 elements), and access pattern (sequential, strided, random). 
+- *Pattern 0 = sequential*
+- *Pattern 1 = strided*
+- *Pattern 2 = random*
+
+**Results.**
+
+<img width="1280" height="960" alt="part6_throughput_vs_ws" src="https://github.com/user-attachments/assets/a0b74d5c-451d-4c3b-b85a-d795dc4660d8" />
+
+Figure 1 (Throughput vs. Working Set) shows clear *knees* as the footprint exceeds successive cache levels. Sequential accesses (pattern 0) achieve very high throughput (~25 GiB/s) while the working set fits in cache, then drop sharply at ~32 KiB, ~512 KiB, and ~4 MiB, corresponding to L1, L2, and LLC capacity limits. Strided accesses (pattern 1) perform consistently worse, as large strides reduce spatial locality and limit the effectiveness of the hardware prefetcher. Random accesses (pattern 2) are worst, staying near ~1 GiB/s regardless of footprint, since each access effectively behaves as a miss beyond the L1 cache.
+
+<img width="1280" height="960" alt="image" src="https://github.com/user-attachments/assets/d1b1740f-4004-4e0c-9c70-8486d7fd6157" />
+
+Figure 2 (Latency vs. Stride) highlights how access pattern further controls performance. Sequential accesses maintain a flat, low latency. Strided accesses show steadily rising latency with increasing stride length, as fewer useful bytes are extracted per cache line. Random accesses maintain the highest latency (~2.7–2.8 ns/byte), reflecting the cost of frequent cache misses with no prefetch benefit.
+
+**Correlation and AMAT.**  
+Although explicit cache-miss counters were unavailable, the runtime trends align with the **Average Memory Access Time (AMAT)** model:
+
+*AMAT = hit time + local miss rate X miss penalty*
+
+As the working set grows, miss rates at each level increase, introducing the penalty of the next level. This explains the observed throughput plateaus and latency increases. Sequential accesses benefit from low miss rates and prefetching, while strided and random accesses raise the effective miss rate, pushing AMAT upward. Thus, performance is strongly correlated with cache-miss behavior, even when measured indirectly.
+
+### 3.7 TLB-miss impact
+
+**Methodology.**  
+To study TLB effects, I reused the SAXPY kernel but fixed the working set size at 512 MiB to ensure the active page set far exceeded DTLB reach. I then varied stride in element units relative to a 4 KiB page: 1024 (one float per page, worst locality), 512, 256, and 128 (increasing reuse within each page). Each run was repeated three times, and the mean ± stdev was plotted. Because WSL2 does not expose hardware TLB miss counters, I used throughput and latency as proxies for TLB behavior. On native Linux, these results would normally be confirmed with `dTLB-load-misses` and page-walk counters. Huge pages could not be tested in WSL2, but they would expand reach and reduce the observed slowdowns.
+
+**Results.**
+
+
+<img width="1280" height="960" alt="part7_throughput_vs_stride" src="https://github.com/user-attachments/assets/8b9c6c90-fdd3-4507-8457-c554e3855a27" />
+
+Figure above (Throughput vs. Stride) shows the highest throughput when stride = 128 (multiple elements per page) and a downward slope as stride increases to 1024 (one element per page). This trend is consistent with increasing TLB pressure: fewer elements are accessed per page, more unique pages are touched, and the TLB must service more lookups.
+
+<img width="1280" height="960" alt="part7_latency_vs_stride" src="https://github.com/user-attachments/assets/2d182be9-aec3-4d67-ac70-00be35be453f" />
+Figure above (Latency vs. Stride) mirrors this trend. Latency is lowest with stride = 128 and grows slightly as stride approaches 1024. Although the error bars are large due to WSL2 noise, the mean values reveal the expected pattern: poorer page locality corresponds to higher access latency.
+
+**Discussion of DTLB Reach.**  
+The effective reach of the DTLB can be estimated as:
+\[
+\text{Reach} \approx (\# \text{entries}) \times (\text{page size})
+\]
+For example, with 64 DTLB entries and 4 KiB pages, reach is ~256 KiB. With a 512 MiB footprint, the active page set greatly exceeds this reach, ensuring frequent TLB misses and costly page walks at large strides. Huge pages (e.g., 2 MiB) would expand reach by 512× and significantly reduce this overhead.
+
+**Conclusion.**  
+Even without direct counters, throughput and latency trends demonstrate the impact of TLB misses. Poor locality (stride = 1024) reduces throughput and raises latency, while better page reuse (stride = 128) alleviates TLB pressure. This behavior is consistent with the limited reach of the DTLB and the performance penalties of page walks.
+
+
+
+
