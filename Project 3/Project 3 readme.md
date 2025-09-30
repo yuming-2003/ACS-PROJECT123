@@ -115,3 +115,6 @@ To evaluate the effect of block size and access pattern, I constructed two fio s
 - By Little’s Law, additional concurrency past the knee translates mainly into waiting time rather than service capacity, which inflates the upper percentiles disproportionately.
 - From an SLA perspective, if a workload requires p99 < 300 µs, QD = 8 would be safe, but QD = 16 risks violation despite ~40% higher throughput. This underscores the throughput–latency trade-off: higher queue depth improves bandwidth but degrades predictability, and tail latencies near the knee highlight limits for latency-sensitive applications.
 
+### 4 Anomalies/Limitations
+
+- Results were collected on WSL2 rather than bare-metal Linux, which may introduce virtualization overhead and prevent direct hardware counter measurement. In 3.3, mixed read/write ratios unexpectedly showed higher read latency than write latency, which likely reflects controller scheduling and buffer-drain prioritization. Additionally, shorter 30s runs may mask long-term steady-state write amplification, so sustained workloads could exhibit higher tail latency. These observations highlight the need to interpret results in the context of system/software limitations rather than as absolute device maxima.
