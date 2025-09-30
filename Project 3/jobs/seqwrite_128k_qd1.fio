@@ -1,0 +1,12 @@
+[global]
+ioengine=libaio
+direct=1
+rw=write
+bs=128k
+iodepth=1
+runtime=30
+time_based=1
+filename=/home/yuming/fio/testfile.dat
+group_reporting=1
+
+[seqwrite_128k_qd1]
