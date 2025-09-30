@@ -6,9 +6,12 @@
 ---
 
 ## 1) Introduction
-
+Modern SSDs (especially NVMe) can deliver massive IOPS and GB/s when requests are issued concurrently. Like 
+memory, storage exhibits a classic throughput–latency trade-off governed by queuing theory: increasing queue 
+depth improves utilization and throughput up to a saturation knee, after which latency rises sharply with little 
+additional throughput.
 ## 2) Experimental Setup
-
+Using the flexible I/O tester from Ubuntu, several experiments were conducted to explore SSD performance.
 
 ## 3) Results
 
@@ -89,5 +92,26 @@ To evaluate the effect of block size and access pattern, I constructed two fio s
 
 ### 3.4 Queue-depth/ parallelism sweep
 
-### 3.5 
+- I fixed pattern (random), block size (4 KiB), and file size (8 GiB). Using direct=1 and norandommap=1, I swept queue depth across 6 points (QD = 1, 2, 4, 8, 16, 64). Each run lasted 30 s with a 5 s ramp. Results were collected in JSON and plotted as a single throughput vs. latency trade-off curve, with p99 latency extracted to highlight tail behavior.
+
+<img width="640" height="480" alt="image" src="https://github.com/user-attachments/assets/bb829992-8ea5-4a62-bb4c-46ec23476eef" />
+
+- From the experiment, we could see that the throughput scales nearly linearly from QD=1 through QD=8, rising from 30 MiB/s to ~221 MiB/s while latency stays in the ~120–137 µs range. The knee occurs between QD=8 and QD=16: throughput only improves by ~40% (221→312 MiB/s) while latency jumps ~43% (137→196 µs). Beyond this point, throughput gains diminish, reaching 681 MiB/s at QD=64—but average latency more than doubles to 546 µs, with p99 tail latency exceeding 1 ms.
+- According to Little’s Law, where Throughput ≈ Concurrency ÷ Latency, this knee reflects the SSD reaching its internal channel/controller parallelism limit
+  - Additional requests simply accumulate in the queue, inflating latency without proportional throughput benefit.
+- The observed peak of 681 MiB/s is close to typical vendor-spec random read ratings (≈700 MiB/s), indicating we reached near-saturation. Overall, the curve shows strong scaling at small QD, clear saturation at QD≈16, and rapidly growing tail latency beyond the knee—highlighting the trade-off between throughput and responsiveness for latency-sensitive workloads.
+
+### 3.5 Tail-Characterization
+
+- Building on the queue-depth sweep, I measured detailed latency percentiles at QD = 8 (mid-load) and QD = 16 (near the knee) for 4 KiB random reads. Percentiles p50/p95/p99/p99.9 were extracted directly from the fio JSON.
+
+| QD | p50 (µs) | p95 (µs) | p99 (µs) | p99.9 (µs) | Avg (µs) |
+|---:|---:|---:|---:|---:|---:| 
+| 8 | 138.2 | 183.3 | 259.1 | 448.5 | 141.1 | 
+| 16 | 185.3 | 261.1 | 354.3 | 514.0 | 187.6 |
+
+- At QD = 8, the distribution is tight: p50 is 138 µs and p99.9 only 3.2× higher at 449 µs, indicating predictable service with short queues.
+- At QD = 16, the entire distribution shifts upward—p50 rises by ~34%, and p99.9 extends past 0.5 ms. This widening tail reflects queueing delays as the device nears saturation.
+- By Little’s Law, additional concurrency past the knee translates mainly into waiting time rather than service capacity, which inflates the upper percentiles disproportionately.
+- From an SLA perspective, if a workload requires p99 < 300 µs, QD = 8 would be safe, but QD = 16 risks violation despite ~40% higher throughput. This underscores the throughput–latency trade-off: higher queue depth improves bandwidth but degrades predictability, and tail latencies near the knee highlight limits for latency-sensitive applications.
 
